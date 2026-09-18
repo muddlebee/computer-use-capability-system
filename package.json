@@ -1,0 +1,27 @@
+{
+  "name": "computer-use-capability-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "cua": "tsx src/cli.ts",
+    "provider:check": "tsx src/cli.ts provider-check"
+  },
+  "dependencies": {
+    "openai": "^6.29.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18"
+  },
+  "packageManager": "pnpm@10.17.1"
+}

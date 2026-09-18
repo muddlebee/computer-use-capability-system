@@ -1,0 +1,14 @@
+node_modules/
+dist/
+coverage/
+.env
+.env.local
+.env.*.local
+*.log
+
+# Generated run data; curated, redacted examples will be force-added later.
+evidence/runs/
+
+# Playwright output
+playwright-report/
+test-results/
