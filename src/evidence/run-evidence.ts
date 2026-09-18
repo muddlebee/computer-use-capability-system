@@ -106,6 +106,20 @@ export class RunEvidence {
     return screenshotPath;
   }
 
+  async writeScreenshotDataUrl(name: string, dataUrl: string): Promise<string> {
+    if (!/^[a-z0-9][a-z0-9_-]*$/.test(name)) {
+      throw new Error(`Invalid evidence screenshot name: ${name}`);
+    }
+    const match = dataUrl.match(/^data:image\/png;base64,([A-Za-z0-9+/=]+)$/);
+    if (!match?.[1]) {
+      throw new Error("Evidence screenshot must be a base64 PNG data URL");
+    }
+    const screenshotPath = path.join(this.directory, `${name}.png`);
+    await writeFile(screenshotPath, Buffer.from(match[1], "base64"), { mode: 0o600 });
+    this.screenshots.push(`${name}.png`);
+    return screenshotPath;
+  }
+
   async writeIndex(
     title: string,
     extraLinks: readonly EvidenceIndexLink[] = [],

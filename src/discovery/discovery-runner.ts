@@ -253,6 +253,11 @@ export async function discoverCapability(
         options.request.target.allowedPathPatterns,
       );
       const observation = await observeBrowser(page, { sensitiveInputNames });
+      const observationScreenshot = `turn-${String(turn).padStart(2, "0")}-observation.png`;
+      await evidence.writeScreenshotDataUrl(
+        observationScreenshot.replace(/\.png$/, ""),
+        observation.screenshotDataUrl,
+      );
       const decision = await decider.decide(
         options.request,
         observation,
@@ -263,6 +268,13 @@ export async function discoverCapability(
       promptTokens += decision.usage.promptTokens;
       completionTokens += decision.usage.completionTokens;
       const action = decision.action;
+
+      await evidence.appendJsonLine("llm-call-trace.jsonl", {
+        timestamp: new Date().toISOString(),
+        turn,
+        observationScreenshot,
+        ...decision.trace,
+      });
 
       await evidence.appendJsonLine("model-tool-calls.jsonl", {
         timestamp: new Date().toISOString(),
@@ -350,7 +362,10 @@ export async function discoverCapability(
         });
         await evidence.writeIndex(
           `Discovery success: ${options.request.capabilityId}`,
-          [{ href: "model-tool-calls.jsonl", label: "Model tool calls" }],
+          [
+            { href: "llm-call-trace.jsonl", label: "Full LLM call trace" },
+            { href: "model-tool-calls.jsonl", label: "Model tool calls" },
+          ],
         );
         return result;
       }
@@ -489,7 +504,10 @@ export async function discoverCapability(
     });
     await evidence.writeIndex(
       `Discovery failure: ${options.request.capabilityId}`,
-      [{ href: "model-tool-calls.jsonl", label: "Model tool calls" }],
+      [
+        { href: "llm-call-trace.jsonl", label: "Full LLM call trace" },
+        { href: "model-tool-calls.jsonl", label: "Model tool calls" },
+      ],
     );
     throw error;
   } finally {

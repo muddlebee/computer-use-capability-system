@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import OpenAI from "openai";
 import { z } from "zod";
 
@@ -16,6 +18,9 @@ const RationaleProperty = {
   type: "string",
   description: "A short operational reason for this action, without hidden reasoning.",
 } as const;
+
+const SYSTEM_PROMPT =
+  "You are the discovery controller for a regulated UI automation harness. Operate only the supplied page and visible catalog. Never submit, commit, delete, approve, or use a human-only/irreversible control. Prefer catalog element IDs over coordinates. For typing and selection, reference declared inputs instead of returning literal data. Extract every declared output before completing. If safe progress is impossible, escalate.";
 
 const ACTION_TOOLS: OpenAI.Chat.Completions.ChatCompletionTool[] = [
   {
@@ -212,6 +217,28 @@ export interface ActionDecision {
     readonly promptTokens: number;
     readonly completionTokens: number;
   };
+  readonly trace: {
+    readonly durationMs: number;
+    readonly request: {
+      readonly model: string;
+      readonly systemPrompt: string;
+      readonly userPrompt: string;
+      readonly screenshotSha256: string;
+      readonly screenshotDetail: "low";
+      readonly tools: OpenAI.Chat.Completions.ChatCompletionTool[];
+      readonly toolChoice: "required";
+      readonly maxCompletionTokens: number;
+    };
+    readonly response: {
+      readonly id: string;
+      readonly created: number;
+      readonly model: string;
+      readonly finishReason: string | null;
+      readonly content: string | null;
+      readonly toolCalls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[];
+      readonly usage: OpenAI.CompletionUsage | undefined;
+    };
+  };
 }
 
 function parseToolArguments(argumentsJson: string): unknown {
@@ -324,21 +351,22 @@ export class OpenAICompatibleActionDecider {
     history: readonly DiscoveryHistoryEntry[],
     signal?: AbortSignal,
   ): Promise<ActionDecision> {
+    const userPrompt = buildObservationText(request, observation, history);
+    const startedAt = performance.now();
     const completion = await this.client.chat.completions.create(
       {
         model: this.config.model,
         messages: [
           {
             role: "system",
-            content:
-              "You are the discovery controller for a regulated UI automation harness. Operate only the supplied page and visible catalog. Never submit, commit, delete, approve, or use a human-only/irreversible control. Prefer catalog element IDs over coordinates. For typing and selection, reference declared inputs instead of returning literal data. Extract every declared output before completing. If safe progress is impossible, escalate.",
+            content: SYSTEM_PROMPT,
           },
           {
             role: "user",
             content: [
               {
                 type: "text",
-                text: buildObservationText(request, observation, history),
+                text: userPrompt,
               },
               {
                 type: "image_url",
@@ -371,6 +399,30 @@ export class OpenAICompatibleActionDecider {
       usage: {
         promptTokens: completion.usage?.prompt_tokens ?? 0,
         completionTokens: completion.usage?.completion_tokens ?? 0,
+      },
+      trace: {
+        durationMs: Math.round(performance.now() - startedAt),
+        request: {
+          model: this.config.model,
+          systemPrompt: SYSTEM_PROMPT,
+          userPrompt,
+          screenshotSha256: createHash("sha256")
+            .update(observation.screenshotDataUrl)
+            .digest("hex"),
+          screenshotDetail: "low",
+          tools: ACTION_TOOLS,
+          toolChoice: "required",
+          maxCompletionTokens: 400,
+        },
+        response: {
+          id: completion.id,
+          created: completion.created,
+          model: completion.model,
+          finishReason: completion.choices[0]?.finish_reason ?? null,
+          content: completion.choices[0]?.message.content ?? null,
+          toolCalls,
+          usage: completion.usage,
+        },
       },
     };
   }

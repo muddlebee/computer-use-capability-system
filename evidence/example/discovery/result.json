@@ -1,13 +1,13 @@
 {
   "status": "success",
   "mode": "discovery",
-  "runId": "969afb7e-19cd-469a-9e3f-9482c993b0cf",
+  "runId": "9aa167b4-0ceb-43b8-8af6-fb4c26c80d6f",
   "capabilityId": "prepare-fee-reversal",
   "provider": "openrouter",
   "model": "openai/gpt-5.6-luna",
   "modelCalls": 13,
   "recordedSteps": 11,
-  "evidenceDirectory": "evidence/discovery/969afb7e-19cd-469a-9e3f-9482c993b0cf",
+  "evidenceDirectory": "evidence/discovery/9aa167b4-0ceb-43b8-8af6-fb4c26c80d6f",
   "outputs": {
     "reviewReference": "[REDACTED]",
     "accountLast4": "[REDACTED]",
@@ -16,6 +16,6 @@
   },
   "usage": {
     "promptTokens": 24426,
-    "completionTokens": 1106
+    "completionTokens": 1102
   }
 }
