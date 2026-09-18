@@ -1,0 +1,18 @@
+<%- include("partials/header", { title: "Member Search" }) %>
+<% if (outcome === "not-found") { %>
+  <div class="alert error" role="alert">No member found for that identifier.</div>
+<% } %>
+<form method="post" action="/servicing/search" class="legacy-form">
+  <input type="hidden" name="scenario" value="<%= scenario %>">
+  <table>
+    <tr>
+      <td class="field-label">Member number</td>
+      <td><input name="memberId" size="18" maxlength="12" autocomplete="off"></td>
+    </tr>
+  </table>
+  <button type="submit">Search Members</button>
+</form>
+<section class="scenario-box">
+  <strong>Demo scenario:</strong> <%= scenario %>
+</section>
+<%- include("partials/footer") %>

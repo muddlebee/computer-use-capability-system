@@ -1,0 +1,7 @@
+<%- include("partials/header", { title: "Session Warning" }) %>
+<div class="dialog" role="dialog" aria-labelledby="warning-heading">
+  <h2 id="warning-heading">Your session is about to expire</h2>
+  <p>Operator activity was not detected. Continue the session to keep working.</p>
+  <a class="button-link" href="<%= continueUrl %>">Continue session</a>
+</div>
+<%- include("partials/footer") %>

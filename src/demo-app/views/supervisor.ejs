@@ -1,0 +1,9 @@
+<%- include("partials/header", { title: "Supervisor Authorization" }) %>
+<div class="dialog" role="dialog" aria-labelledby="approval-heading">
+  <h2 id="approval-heading">Supervisor authorization required</h2>
+  <p>A supervisor must approve access to the fee reversal form.</p>
+  <form method="post" action="<%= approvalUrl %>">
+    <button type="submit" data-risk="human-only">Approve as supervisor</button>
+  </form>
+</div>
+<%- include("partials/footer") %>

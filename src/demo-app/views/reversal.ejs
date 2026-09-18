@@ -1,0 +1,25 @@
+<%- include("partials/header", { title: "Prepare Fee Reversal" }) %>
+<p>Member <strong><%= member.name %></strong>, checking account ****<%= member.accountLast4 %></p>
+<form method="post" action="<%= reviewUrl %>" class="legacy-form">
+  <input type="hidden" name="scenario" value="<%= scenario %>">
+  <input type="hidden" name="authorized" value="<%= authorized ? "1" : "0" %>">
+  <table>
+    <tr>
+      <td class="field-label">Reversal amount</td>
+      <td><input name="amount" inputmode="decimal" placeholder="0.00"></td>
+    </tr>
+    <tr>
+      <td class="field-label">Reason code</td>
+      <td>
+        <select name="reason">
+          <option value="">-- Select reason --</option>
+          <option value="duplicate_fee">Duplicate fee</option>
+          <option value="incorrect_fee">Incorrect fee</option>
+          <option value="other">Other</option>
+        </select>
+      </td>
+    </tr>
+  </table>
+  <button type="submit">Continue to review</button>
+</form>
+<%- include("partials/footer") %>

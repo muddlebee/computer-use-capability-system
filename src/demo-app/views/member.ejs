@@ -1,0 +1,16 @@
+<%- include("partials/header", { title: "Member Details" }) %>
+<table class="details-table">
+  <tr><th>Member number</th><td><%= member.id %></td></tr>
+  <tr><th>Member name</th><td><%= member.name %></td></tr>
+</table>
+<h2>Accounts</h2>
+<table class="grid">
+  <tr><th>Type</th><th>Account</th><th>Available balance</th><th>Action</th></tr>
+  <tr>
+    <td>Checking</td>
+    <td>****<%= member.accountLast4 %></td>
+    <td><%= member.balance %></td>
+    <td><a href="<%= accountUrl %>">Open account</a></td>
+  </tr>
+</table>
+<%- include("partials/footer") %>

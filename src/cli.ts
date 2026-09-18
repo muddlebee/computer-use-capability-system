@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 
+import { config as loadDotenv } from "dotenv";
+
 import { loadLlmConfig, publicLlmConfig } from "./config/llm-config.js";
 import { checkProvider } from "./llm/provider-check.js";
 import { safeErrorMessage } from "./security/redact.js";
+
+loadDotenv({ quiet: true });
 
 function printUsage(): void {
   process.stdout.write(`Usage: pnpm cua <command>\n\nCommands:\n  provider-check  Verify the configured OpenAI-compatible provider\n`);
