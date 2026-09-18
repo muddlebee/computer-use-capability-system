@@ -1,11 +1,11 @@
 <%- include("partials/header", { title: "Fee Reversal Review" }) %>
 <div class="alert warning">Review only. No reversal has been submitted.</div>
 <table class="details-table">
-  <tr><th>Review reference</th><td><%= reference %></td></tr>
-  <tr><th>Account</th><td>****<%= member.accountLast4 %></td></tr>
-  <tr><th>Amount</th><td>$<%= amount %></td></tr>
-  <tr><th>Reason</th><td><%= reason %></td></tr>
-  <tr><th>Status</th><td>Ready for review</td></tr>
+  <tr><th scope="row">Review reference</th><td><%= reference %></td></tr>
+  <tr><th scope="row">Account</th><td>****<%= member.accountLast4 %></td></tr>
+  <tr><th scope="row">Amount</th><td>$<%= amount %></td></tr>
+  <tr><th scope="row">Reason</th><td><%= reason %></td></tr>
+  <tr><th scope="row">Status</th><td>Ready for review</td></tr>
 </table>
 <form method="post" action="/servicing/submit-reversal">
   <button type="submit" data-risk="irreversible">Submit reversal</button>

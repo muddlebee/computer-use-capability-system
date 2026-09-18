@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "1.0.0",
+  "capability": {
+    "id": "prepare-fee-reversal",
+    "version": "0.1.0",
+    "summary": "Prepare a fee reversal for a member and stop at the review screen."
+  },
+  "target": {
+    "appId": "legacy-credit-union",
+    "surface": "browser",
+    "entryUrl": "http://127.0.0.1:3000/servicing/search?scenario=happy",
+    "allowedOrigins": ["http://127.0.0.1:3000"]
+  },
+  "inputs": [
+    {
+      "name": "memberId",
+      "type": "string",
+      "sensitive": true,
+      "pattern": "^M-[0-9]{4}$"
+    },
+    {
+      "name": "amount",
+      "type": "decimal",
+      "sensitive": false
+    },
+    {
+      "name": "reason",
+      "type": "enum",
+      "sensitive": false,
+      "values": ["duplicate_fee", "incorrect_fee", "other"]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "reviewReference",
+      "type": "string",
+      "description": "Reference displayed on the review screen",
+      "sensitive": false
+    },
+    {
+      "name": "accountLast4",
+      "type": "string",
+      "description": "Last four characters of the account number",
+      "sensitive": true
+    },
+    {
+      "name": "amount",
+      "type": "currency",
+      "description": "Fee reversal amount shown for review",
+      "sensitive": false
+    },
+    {
+      "name": "reviewStatus",
+      "type": "string",
+      "description": "Current review status",
+      "sensitive": false
+    }
+  ],
+  "steps": [
+    {
+      "id": "step-1",
+      "kind": "type",
+      "target": {
+        "key": "memberIdField",
+        "strategies": [
+          { "kind": "attribute", "name": "name", "value": "memberId" },
+          { "kind": "css", "selector": "input[name=\"memberId\"]" }
+        ]
+      },
+      "value": { "kind": "input", "inputRef": "memberId" },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-2",
+      "kind": "click",
+      "target": {
+        "key": "searchButton",
+        "strategies": [
+          { "kind": "role", "role": "button", "name": "Search Members", "exact": true },
+          { "kind": "text", "text": "Search Members", "exact": true }
+        ]
+      },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-3",
+      "kind": "click",
+      "target": {
+        "key": "openAccountLink",
+        "strategies": [
+          { "kind": "role", "role": "link", "name": "Open account", "exact": true }
+        ]
+      },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-4",
+      "kind": "click",
+      "target": {
+        "key": "prepareReversalLink",
+        "strategies": [
+          { "kind": "role", "role": "link", "name": "Prepare fee reversal", "exact": true }
+        ]
+      },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-5",
+      "kind": "type",
+      "target": {
+        "key": "amountField",
+        "strategies": [
+          { "kind": "attribute", "name": "name", "value": "amount" }
+        ]
+      },
+      "value": { "kind": "input", "inputRef": "amount" },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-6",
+      "kind": "select",
+      "target": {
+        "key": "reasonField",
+        "strategies": [
+          { "kind": "attribute", "name": "name", "value": "reason" }
+        ]
+      },
+      "value": { "kind": "input", "inputRef": "reason" },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-7",
+      "kind": "click",
+      "target": {
+        "key": "continueToReviewButton",
+        "strategies": [
+          { "kind": "role", "role": "button", "name": "Continue to review", "exact": true }
+        ]
+      },
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-8",
+      "kind": "extract",
+      "target": {
+        "key": "reviewReferenceValue",
+        "strategies": [{ "kind": "row_label", "label": "Review reference" }]
+      },
+      "outputName": "reviewReference",
+      "parser": "text",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-9",
+      "kind": "extract",
+      "target": {
+        "key": "accountLast4Value",
+        "strategies": [{ "kind": "row_label", "label": "Account" }]
+      },
+      "outputName": "accountLast4",
+      "parser": "last4",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-10",
+      "kind": "extract",
+      "target": {
+        "key": "amountValue",
+        "strategies": [{ "kind": "row_label", "label": "Amount" }]
+      },
+      "outputName": "amount",
+      "parser": "currency",
+      "timeoutMs": 5000
+    },
+    {
+      "id": "step-11",
+      "kind": "extract",
+      "target": {
+        "key": "reviewStatusValue",
+        "strategies": [{ "kind": "row_label", "label": "Status" }]
+      },
+      "outputName": "reviewStatus",
+      "parser": "text",
+      "timeoutMs": 5000
+    }
+  ],
+  "checkpoint": {
+    "kind": "text_present",
+    "text": "Fee Reversal Review"
+  },
+  "businessOutcomes": [
+    {
+      "code": "member_not_found",
+      "condition": { "kind": "text_present", "text": "No member found for that identifier" }
+    }
+  ],
+  "policy": {
+    "allowedActions": ["click", "type", "select", "extract", "wait_for"],
+    "irreversibleActions": "deny"
+  }
+}

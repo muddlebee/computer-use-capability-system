@@ -96,6 +96,17 @@ describe("DiscoveryActionSchema", () => {
       }),
     ).toThrow();
   });
+
+  it("accepts a parameterized select action", () => {
+    expect(
+      DiscoveryActionSchema.parse({
+        kind: "select",
+        elementId: "e-reason",
+        inputRef: "reason",
+        rationale: "Select the requested reason code.",
+      }),
+    ).toMatchObject({ kind: "select", inputRef: "reason" });
+  });
 });
 
 describe("CapabilityArtifactSchema", () => {

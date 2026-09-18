@@ -134,6 +134,11 @@ export const DiscoveryActionSchema = z.discriminatedUnion("kind", [
     inputRef: IdentifierSchema,
   }),
   ActionBaseSchema.extend({
+    kind: z.literal("select"),
+    elementId: z.string().min(1),
+    inputRef: IdentifierSchema,
+  }),
+  ActionBaseSchema.extend({
     kind: z.literal("extract"),
     elementId: z.string().min(1),
     outputName: IdentifierSchema,
@@ -160,7 +165,18 @@ export const DiscoveryActionSchema = z.discriminatedUnion("kind", [
 export const LocatorStrategySchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("role"),
-    role: z.string().min(1),
+    role: z.enum([
+      "alert",
+      "button",
+      "cell",
+      "combobox",
+      "dialog",
+      "heading",
+      "link",
+      "row",
+      "rowheader",
+      "textbox",
+    ]),
     name: z.string().min(1),
     exact: z.boolean().default(true),
   }),
@@ -172,8 +188,12 @@ export const LocatorStrategySchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("attribute"),
-    name: z.string().min(1),
+    name: z.string().regex(/^[a-zA-Z_:][-a-zA-Z0-9_:.]*$/),
     value: z.string().min(1),
+  }),
+  z.object({
+    kind: z.literal("row_label"),
+    label: z.string().min(1),
   }),
   z.object({ kind: z.literal("css"), selector: z.string().min(1) }),
 ]);
@@ -204,10 +224,17 @@ export const ArtifactStepSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     id: StepIdSchema,
+    kind: z.literal("select"),
+    target: TargetDescriptorSchema,
+    value: ValueSourceSchema,
+    timeoutMs: z.number().int().min(100).max(30_000),
+  }),
+  z.object({
+    id: StepIdSchema,
     kind: z.literal("extract"),
     target: TargetDescriptorSchema,
     outputName: IdentifierSchema,
-    parser: z.enum(["text", "currency", "boolean"]),
+    parser: z.enum(["text", "currency", "boolean", "last4"]),
     timeoutMs: z.number().int().min(100).max(30_000),
   }),
   z.object({
@@ -243,7 +270,7 @@ export const CapabilityArtifactSchema = z.object({
   ),
   policy: z.object({
     allowedActions: z
-      .array(z.enum(["click", "type", "extract", "wait_for"]))
+      .array(z.enum(["click", "type", "select", "extract", "wait_for"]))
       .min(1),
     irreversibleActions: z.literal("deny"),
   }),
