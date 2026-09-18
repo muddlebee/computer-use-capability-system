@@ -16,7 +16,10 @@ import {
 } from "../domain/contracts.js";
 import { parseOutputValue } from "../domain/output-parser.js";
 import { RunEvidence } from "../evidence/run-evidence.js";
-import { safeErrorMessage } from "../security/redact.js";
+import {
+  redactUrlForEvidence,
+  safeErrorMessage,
+} from "../security/redact.js";
 import {
   OpenAICompatibleActionDecider,
   type DiscoveryHistoryEntry,
@@ -261,6 +264,16 @@ export async function discoverCapability(
       completionTokens += decision.usage.completionTokens;
       const action = decision.action;
 
+      await evidence.appendJsonLine("model-tool-calls.jsonl", {
+        timestamp: new Date().toISOString(),
+        turn,
+        responseId: decision.responseId,
+        toolName: decision.toolName,
+        arguments: action,
+        url: redactUrlForEvidence(observation.url),
+        usage: decision.usage,
+      });
+
       await evidence.write({
         event: "discovery_action",
         detail: `turn=${turn} kind=${action.kind}`,
@@ -337,6 +350,7 @@ export async function discoverCapability(
         });
         await evidence.writeIndex(
           `Discovery success: ${options.request.capabilityId}`,
+          [{ href: "model-tool-calls.jsonl", label: "Model tool calls" }],
         );
         return result;
       }
@@ -475,6 +489,7 @@ export async function discoverCapability(
     });
     await evidence.writeIndex(
       `Discovery failure: ${options.request.capabilityId}`,
+      [{ href: "model-tool-calls.jsonl", label: "Model tool calls" }],
     );
     throw error;
   } finally {

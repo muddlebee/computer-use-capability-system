@@ -112,7 +112,11 @@ Every discovery and replay run stores:
 - `step-00-start.png`, followed by one masked screenshot for every completed step,
 - `success.png`, `failure.png`, or `business-outcome.png` for the final state.
 
+Discovery runs additionally store `model-tool-calls.jsonl`. Each line contains the provider response ID, selected tool, validated arguments, short operational rationale, redacted URL, and token usage. It does not contain invocation values or hidden chain-of-thought.
+
 The CLI still returns full typed outputs to its caller; only persisted sensitive evidence is redacted.
+
+The screenshot sequence plus `events.jsonl` is the default execution trace. Playwright trace archives are intentionally not persisted because their DOM snapshots can silently retain input values even when screenshots are masked.
 
 ## Runtime-condition demos
 

@@ -206,6 +206,7 @@ export interface DiscoveryHistoryEntry {
 
 export interface ActionDecision {
   readonly action: DiscoveryAction;
+  readonly toolName: string;
   readonly responseId: string;
   readonly usage: {
     readonly promptTokens: number;
@@ -358,9 +359,14 @@ export class OpenAICompatibleActionDecider {
     if (toolCalls.length !== 1 || !toolCalls[0]) {
       throw new Error(`Model must return exactly one action; received ${toolCalls.length}`);
     }
+    const toolCall = toolCalls[0];
+    if (toolCall.type !== "function") {
+      throw new Error(`Unsupported model tool call type: ${toolCall.type}`);
+    }
 
     return {
-      action: actionFromToolCall(toolCalls[0]),
+      action: actionFromToolCall(toolCall),
+      toolName: toolCall.function.name,
       responseId: completion.id,
       usage: {
         promptTokens: completion.usage?.prompt_tokens ?? 0,

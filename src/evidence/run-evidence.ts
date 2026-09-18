@@ -15,6 +15,11 @@ export interface ScreenshotOptions {
   readonly maskSelectors?: readonly string[];
 }
 
+export interface EvidenceIndexLink {
+  readonly href: string;
+  readonly label: string;
+}
+
 function escapeHtml(value: string): string {
   return value.replace(
     /[&<>"']/g,
@@ -72,6 +77,16 @@ export class RunEvidence {
     return filePath;
   }
 
+  async appendJsonLine(name: string, value: unknown): Promise<string> {
+    if (!/^[a-z0-9][a-z0-9-]*\.jsonl$/.test(name)) {
+      throw new Error(`Invalid evidence JSONL filename: ${name}`);
+    }
+    const filePath = path.join(this.directory, name);
+    const serialized = redactSecrets(`${JSON.stringify(value)}\n`);
+    await appendFile(filePath, serialized, { encoding: "utf8", mode: 0o600 });
+    return filePath;
+  }
+
   async screenshot(
     page: Page,
     name: string,
@@ -91,7 +106,10 @@ export class RunEvidence {
     return screenshotPath;
   }
 
-  async writeIndex(title: string): Promise<string> {
+  async writeIndex(
+    title: string,
+    extraLinks: readonly EvidenceIndexLink[] = [],
+  ): Promise<string> {
     const filePath = path.join(this.directory, "index.html");
     const figures = this.screenshots
       .map(
@@ -101,6 +119,16 @@ export class RunEvidence {
 </figure>`,
       )
       .join("\n");
+    const navigation = [
+      { href: "result.json", label: "Result JSON" },
+      { href: "events.jsonl", label: "Event log" },
+      ...extraLinks,
+    ]
+      .map(
+        (link) =>
+          `<a href="${escapeHtml(link.href)}">${escapeHtml(link.label)}</a>`,
+      )
+      .join("");
     const html = `<!doctype html>
 <html lang="en">
 <head>
@@ -117,7 +145,7 @@ export class RunEvidence {
 </head>
 <body>
   <h1>${escapeHtml(title)}</h1>
-  <nav><a href="result.json">Result JSON</a><a href="events.jsonl">Event log</a></nav>
+  <nav>${navigation}</nav>
   ${figures}
 </body>
 </html>\n`;
