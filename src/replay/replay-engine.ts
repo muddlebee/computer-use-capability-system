@@ -7,6 +7,7 @@ import type {
   CapabilityArtifact,
   RunResult,
 } from "../domain/contracts.js";
+import { parseOutputValue } from "../domain/output-parser.js";
 import { RunEvidence } from "../evidence/run-evidence.js";
 import type { HumanHandoff } from "../handoff/operator-console.js";
 import { validateReplayInputs, type ReplayInputs } from "./inputs.js";
@@ -61,37 +62,6 @@ async function enforceTargetPolicy(locator: Locator): Promise<void> {
   const risk = await locator.getAttribute("data-risk");
   if (risk === "irreversible" || risk === "human-only") {
     throw new Error(`Policy denied ${risk} control`);
-  }
-}
-
-function parseExtractedValue(
-  rawValue: string,
-  parser: Extract<ArtifactStep, { kind: "extract" }>["parser"],
-): string | boolean {
-  const value = rawValue.trim();
-  switch (parser) {
-    case "text":
-      return value;
-    case "currency": {
-      const normalized = value.replaceAll(",", "").replace(/^\$/, "");
-      if (!/^\d+\.\d{2}$/.test(normalized)) {
-        throw new Error(`Could not parse currency output: ${value}`);
-      }
-      return normalized;
-    }
-    case "boolean":
-      if (/^(true|yes)$/i.test(value)) return true;
-      if (/^(false|no)$/i.test(value)) return false;
-      throw new Error(`Could not parse boolean output: ${value}`);
-    case "last4": {
-      const match = value.match(/([A-Za-z0-9]{4})$/);
-      if (!match?.[1]) throw new Error(`Could not parse last four characters: ${value}`);
-      return match[1];
-    }
-    default: {
-      const exhaustive: never = parser;
-      return exhaustive;
-    }
   }
 }
 
@@ -153,7 +123,7 @@ async function executeStep(
       return;
     case "extract": {
       const rawValue = await locator.innerText({ timeout: step.timeoutMs });
-      outputs[step.outputName] = parseExtractedValue(rawValue, step.parser);
+      outputs[step.outputName] = parseOutputValue(rawValue, step.parser);
       return;
     }
     default: {
@@ -174,6 +144,43 @@ function evidenceMaskSelectors(artifact: CapabilityArtifact): string[] {
       .filter((input) => input.sensitive)
       .map((input) => `[name=${JSON.stringify(input.name)}]`),
   ];
+}
+
+function stepScreenshotName(step: ArtifactStep): string {
+  const sequence = step.id.replace("step-", "").padStart(2, "0");
+  return `step-${sequence}-${step.kind}`;
+}
+
+function redactReplayResultForEvidence(
+  result: RunResult,
+  artifact: CapabilityArtifact,
+): RunResult {
+  if (result.status !== "success") return result;
+  const sensitiveOutputs = new Set(
+    artifact.outputs.filter((output) => output.sensitive).map((output) => output.name),
+  );
+  return {
+    ...result,
+    outputs: Object.fromEntries(
+      Object.entries(result.outputs).map(([name, value]) => [
+        name,
+        sensitiveOutputs.has(name) ? "[REDACTED]" : value,
+      ]),
+    ),
+  };
+}
+
+async function persistReplayResult(
+  evidence: RunEvidence,
+  artifact: CapabilityArtifact,
+  result: RunResult,
+): Promise<RunResult> {
+  await evidence.writeJson(
+    "result.json",
+    redactReplayResultForEvidence(result, artifact),
+  );
+  await evidence.writeIndex(`Replay ${result.status}: ${artifact.capability.id}`);
+  return result;
 }
 
 async function processRuntimeConditions(
@@ -221,6 +228,9 @@ async function processRuntimeConditions(
       event: "recovery_completed",
       stepId,
       detail: recovery.code,
+    });
+    await evidence.screenshot(page, `recovery-${recovery.code}`, {
+      maskSelectors: evidenceMaskSelectors(artifact),
     });
   }
 
@@ -276,6 +286,7 @@ export async function replayCapability(
 
     await evidence.write({ event: "replay_started" });
     await page.goto(entryUrl, { waitUntil: "domcontentloaded" });
+    await evidence.screenshot(page, "step-00-start", { maskSelectors });
 
     const initialOutcome = await processRuntimeConditions(
       page,
@@ -289,14 +300,14 @@ export async function replayCapability(
     );
     if (initialOutcome) {
       await evidence.screenshot(page, "business-outcome", { maskSelectors });
-      return {
+      return persistReplayResult(evidence, options.artifact, {
         status: "business_outcome",
         runId,
         evidenceDirectory: evidence.directory,
         recoveries,
         code: initialOutcome,
         details: {},
-      };
+      });
     }
 
     for (const step of options.artifact.steps) {
@@ -313,6 +324,7 @@ export async function replayCapability(
       await executeStep(page, step, inputs, outputs);
       assertAllowedOrigin(page.url(), options.artifact);
       await evidence.write({ event: "step_completed", stepId: step.id });
+      await evidence.screenshot(page, stepScreenshotName(step), { maskSelectors });
 
       const businessOutcome = await processRuntimeConditions(
         page,
@@ -326,14 +338,14 @@ export async function replayCapability(
       );
       if (businessOutcome) {
         await evidence.screenshot(page, "business-outcome", { maskSelectors });
-        return {
+        return persistReplayResult(evidence, options.artifact, {
           status: "business_outcome",
           runId,
           evidenceDirectory: evidence.directory,
           recoveries,
           code: businessOutcome,
           details: {},
-        };
+        });
       }
     }
 
@@ -353,13 +365,13 @@ export async function replayCapability(
     await evidence.screenshot(page, "success", { maskSelectors });
     await evidence.write({ event: "replay_succeeded" });
 
-    return {
+    return persistReplayResult(evidence, options.artifact, {
       status: "success",
       runId,
       evidenceDirectory: evidence.directory,
       recoveries,
       outputs,
-    };
+    });
   } catch (error: unknown) {
     if (page) await evidence.screenshot(page, "failure", { maskSelectors });
     await evidence.write({
@@ -367,7 +379,7 @@ export async function replayCapability(
       ...(currentStepId ? { stepId: currentStepId } : {}),
       detail: error instanceof Error ? error.message : "Unknown replay error",
     });
-    return {
+    return persistReplayResult(evidence, options.artifact, {
       status: "failure",
       runId,
       evidenceDirectory: evidence.directory,
@@ -386,7 +398,7 @@ export async function replayCapability(
       expected: "The deterministic step and final checkpoint should succeed.",
       observed: error instanceof Error ? error.message : "Unknown replay error",
       retryable: error instanceof ReplayExecutionError ? error.retryable : false,
-    };
+    });
   } finally {
     await closeBrowser(browser);
   }

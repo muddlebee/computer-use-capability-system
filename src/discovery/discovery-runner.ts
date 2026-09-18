@@ -14,7 +14,9 @@ import {
   type CapabilityArtifact,
   type DiscoveryRequest,
 } from "../domain/contracts.js";
+import { parseOutputValue } from "../domain/output-parser.js";
 import { RunEvidence } from "../evidence/run-evidence.js";
+import { safeErrorMessage } from "../security/redact.js";
 import {
   OpenAICompatibleActionDecider,
   type DiscoveryHistoryEntry,
@@ -211,12 +213,18 @@ export async function discoverCapability(
   const sensitiveInputNames = options.request.inputs
     .filter((input) => input.sensitive)
     .map((input) => input.name);
+  const maskSelectors = [
+    "[data-sensitive='true']",
+    ...sensitiveInputNames.map((name) => `[name=${JSON.stringify(name)}]`),
+  ];
   const steps: ArtifactStep[] = [];
   const extractedOutputs = new Set<string>();
+  const outputValues: Record<string, unknown> = {};
   const history: DiscoveryHistoryEntry[] = [];
   const deadline = Date.now() + options.request.timeoutMs;
   let promptTokens = 0;
   let completionTokens = 0;
+  let modelCalls = 0;
   let browser: Browser | undefined;
   let page: Page | undefined;
 
@@ -229,6 +237,7 @@ export async function discoverCapability(
     await page.goto(options.request.target.startUrl, {
       waitUntil: "domcontentloaded",
     });
+    await evidence.screenshot(page, "step-00-start", { maskSelectors });
 
     for (let turn = 1; turn <= options.request.maxSteps; turn += 1) {
       const remainingMs = deadline - Date.now();
@@ -247,6 +256,7 @@ export async function discoverCapability(
         history,
         AbortSignal.timeout(remainingMs),
       );
+      modelCalls += 1;
       promptTokens += decision.usage.promptTokens;
       completionTokens += decision.usage.completionTokens;
       const action = decision.action;
@@ -258,6 +268,11 @@ export async function discoverCapability(
 
       if (action.kind === "complete") {
         if (!(await conditionMatches(page, action.checkpoint))) {
+          await evidence.screenshot(
+            page,
+            `step-${String(turn).padStart(2, "0")}-complete-rejected`,
+            { maskSelectors },
+          );
           history.push({
             turn,
             action: action.kind,
@@ -271,6 +286,11 @@ export async function discoverCapability(
           .map((output) => output.name)
           .filter((name) => !extractedOutputs.has(name));
         if (missingOutputs.length > 0) {
+          await evidence.screenshot(
+            page,
+            `step-${String(turn).padStart(2, "0")}-complete-rejected`,
+            { maskSelectors },
+          );
           history.push({
             turn,
             action: action.kind,
@@ -280,21 +300,45 @@ export async function discoverCapability(
           continue;
         }
         const artifact = compileArtifact(options.request, steps, action.checkpoint);
-        await evidence.screenshot(page, "success", {
-          maskSelectors: [
-            "[data-sensitive='true']",
-            ...sensitiveInputNames.map((name) => `[name=${JSON.stringify(name)}]`),
-          ],
-        });
+        await evidence.screenshot(
+          page,
+          `step-${String(turn).padStart(2, "0")}-complete`,
+          { maskSelectors },
+        );
+        await evidence.screenshot(page, "success", { maskSelectors });
         await evidence.write({ event: "discovery_succeeded" });
-        return {
+        const result = {
           artifact,
           runId,
           evidenceDirectory: evidence.directory,
-          modelCalls: turn,
+          modelCalls,
           promptTokens,
           completionTokens,
         };
+        await evidence.writeJson("result.json", {
+          status: "success",
+          mode: "discovery",
+          runId,
+          capabilityId: options.request.capabilityId,
+          provider: options.llmConfig.provider,
+          model: options.llmConfig.model,
+          modelCalls,
+          recordedSteps: artifact.steps.length,
+          evidenceDirectory: evidence.directory,
+          outputs: Object.fromEntries(
+            options.request.outputs
+              .filter((output) => output.name in outputValues)
+              .map((output) => [
+                output.name,
+                output.sensitive ? "[REDACTED]" : outputValues[output.name],
+              ]),
+          ),
+          usage: { promptTokens, completionTokens },
+        });
+        await evidence.writeIndex(
+          `Discovery success: ${options.request.capabilityId}`,
+        );
+        return result;
       }
 
       if (action.kind === "escalate") {
@@ -375,7 +419,8 @@ export async function discoverCapability(
           });
         } else {
           const parser = outputParser(options.request, action.outputName);
-          await locator.innerText({ timeout: 5_000 });
+          const rawValue = await locator.innerText({ timeout: 5_000 });
+          outputValues[action.outputName] = parseOutputValue(rawValue, parser);
           extractedOutputs.add(action.outputName);
           historyResult = `captured declared output ${action.outputName}`;
           steps.push({
@@ -394,6 +439,11 @@ export async function discoverCapability(
         allowedOrigin,
         options.request.target.allowedPathPatterns,
       );
+      await evidence.screenshot(
+        page,
+        `step-${String(turn).padStart(2, "0")}-${action.kind}`,
+        { maskSelectors },
+      );
       history.push({
         turn,
         action: action.kind,
@@ -405,17 +455,27 @@ export async function discoverCapability(
     throw new Error(`Discovery exceeded maxSteps=${options.request.maxSteps}`);
   } catch (error: unknown) {
     if (page) {
-      await evidence.screenshot(page, "failure", {
-        maskSelectors: [
-          "[data-sensitive='true']",
-          ...sensitiveInputNames.map((name) => `[name=${JSON.stringify(name)}]`),
-        ],
-      });
+      await evidence.screenshot(page, "failure", { maskSelectors });
     }
     await evidence.write({
       event: "discovery_failed",
       detail: error instanceof Error ? error.message : "Unknown discovery error",
     });
+    await evidence.writeJson("result.json", {
+      status: "failure",
+      mode: "discovery",
+      runId,
+      capabilityId: options.request.capabilityId,
+      provider: options.llmConfig.provider,
+      model: options.llmConfig.model,
+      modelCalls,
+      evidenceDirectory: evidence.directory,
+      error: safeErrorMessage(error),
+      usage: { promptTokens, completionTokens },
+    });
+    await evidence.writeIndex(
+      `Discovery failure: ${options.request.capabilityId}`,
+    );
     throw error;
   } finally {
     if (browser) await browser.close();

@@ -1,4 +1,4 @@
-import { readFile, rm, mkdtemp } from "node:fs/promises";
+import { readFile, readdir, rm, mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import type { Server } from "node:http";
@@ -80,6 +80,21 @@ describe("deterministic replay", () => {
     );
     expect(events).toContain("replay_succeeded");
     expect(events).not.toContain("M-1001");
+
+    const filenames = await readdir(result.evidenceDirectory);
+    expect(filenames).toContain("step-00-start.png");
+    expect(filenames).toContain("step-01-type.png");
+    expect(filenames).toContain("step-11-extract.png");
+    expect(filenames).toContain("result.json");
+    expect(filenames).toContain("index.html");
+
+    const persistedResult = await readFile(
+      path.join(result.evidenceDirectory, "result.json"),
+      "utf8",
+    );
+    expect(persistedResult).toContain('"reviewReference": "[REDACTED]"');
+    expect(persistedResult).toContain('"accountLast4": "[REDACTED]"');
+    expect(persistedResult).not.toContain("REV-4401-1250");
   }, 30_000);
 
   it("returns a known business outcome instead of a crash", async () => {

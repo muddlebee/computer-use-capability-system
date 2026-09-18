@@ -104,6 +104,16 @@ Expected result:
 
 Run IDs and evidence-directory paths are omitted above for readability. Replay does not load provider configuration and makes no LLM request.
 
+Every discovery and replay run stores:
+
+- `result.json` with the structured final result (sensitive outputs are redacted on disk),
+- `events.jsonl` with the step timeline,
+- `index.html`, an easy-to-open gallery linking the result and every screenshot,
+- `step-00-start.png`, followed by one masked screenshot for every completed step,
+- `success.png`, `failure.png`, or `business-outcome.png` for the final state.
+
+The CLI still returns full typed outputs to its caller; only persisted sensitive evidence is redacted.
+
 ## Runtime-condition demos
 
 ### Known business outcome
@@ -156,6 +166,7 @@ Replay pauses and prints an `intervention_ready` URL. Open it locally, inspect t
 Curated, redacted evidence is under [`evidence/example`](evidence/example):
 
 - genuine OpenRouter discovery log and screenshot
+- a masked screenshot for every discovery and replay step
 - generated capability artifact
 - successful deterministic replay
 - member-not-found business outcome

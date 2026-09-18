@@ -1,4 +1,4 @@
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { Page } from "playwright";
@@ -15,8 +15,23 @@ export interface ScreenshotOptions {
   readonly maskSelectors?: readonly string[];
 }
 
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character] ?? character,
+  );
+}
+
 export class RunEvidence {
   readonly directory: string;
+  private readonly screenshots: string[] = [];
 
   private constructor(directory: string) {
     this.directory = directory;
@@ -42,11 +57,29 @@ export class RunEvidence {
     );
   }
 
+  async writeJson(name: string, value: unknown): Promise<string> {
+    if (!/^[a-z0-9][a-z0-9-]*\.json$/.test(name)) {
+      throw new Error(`Invalid evidence JSON filename: ${name}`);
+    }
+    const filePath = path.join(this.directory, name);
+    const temporaryPath = `${filePath}.${process.pid}.tmp`;
+    const serialized = redactSecrets(`${JSON.stringify(value, null, 2)}\n`);
+    await writeFile(temporaryPath, serialized, {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    await rename(temporaryPath, filePath);
+    return filePath;
+  }
+
   async screenshot(
     page: Page,
     name: string,
     options: ScreenshotOptions = {},
   ): Promise<string> {
+    if (!/^[a-z0-9][a-z0-9_-]*$/.test(name)) {
+      throw new Error(`Invalid evidence screenshot name: ${name}`);
+    }
     const screenshotPath = path.join(this.directory, `${name}.png`);
     await page.screenshot({
       path: screenshotPath,
@@ -54,6 +87,41 @@ export class RunEvidence {
       mask: (options.maskSelectors ?? []).map((selector) => page.locator(selector)),
       maskColor: "#202020",
     });
+    this.screenshots.push(`${name}.png`);
     return screenshotPath;
+  }
+
+  async writeIndex(title: string): Promise<string> {
+    const filePath = path.join(this.directory, "index.html");
+    const figures = this.screenshots
+      .map(
+        (filename) => `<figure>
+  <figcaption>${escapeHtml(filename)}</figcaption>
+  <a href="${encodeURIComponent(filename)}"><img src="${encodeURIComponent(filename)}" alt="${escapeHtml(filename)}"></a>
+</figure>`,
+      )
+      .join("\n");
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${escapeHtml(title)}</title>
+  <style>
+    body { font: 16px system-ui; max-width: 1100px; margin: 2rem auto; padding: 0 1rem; color: #172033; }
+    nav { display: flex; gap: 1rem; margin-bottom: 2rem; }
+    figure { margin: 0 0 2rem; }
+    figcaption { font-weight: 700; margin-bottom: .5rem; }
+    img { max-width: 100%; border: 1px solid #9aa5b5; }
+  </style>
+</head>
+<body>
+  <h1>${escapeHtml(title)}</h1>
+  <nav><a href="result.json">Result JSON</a><a href="events.jsonl">Event log</a></nav>
+  ${figures}
+</body>
+</html>\n`;
+    await writeFile(filePath, html, { encoding: "utf8", mode: 0o600 });
+    return filePath;
   }
 }
