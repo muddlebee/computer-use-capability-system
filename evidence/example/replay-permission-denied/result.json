@@ -1,0 +1,10 @@
+{
+  "status": "failure",
+  "runId": "68e35d69-81bb-486c-b901-979b7e93b6fd",
+  "recoveries": [],
+  "code": "permission_denied",
+  "stepId": "step-3",
+  "expected": "The deterministic step and final checkpoint should succeed.",
+  "observed": "Detected declared hard failure: permission_denied",
+  "retryable": false
+}

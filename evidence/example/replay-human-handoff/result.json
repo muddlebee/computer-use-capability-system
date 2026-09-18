@@ -1,0 +1,11 @@
+{
+  "status": "success",
+  "runId": "e394240f-b343-41be-9cf9-999b29594a7b",
+  "recoveries": [],
+  "outputs": {
+    "reviewReference": "[REDACTED]",
+    "accountLast4": "[REDACTED]",
+    "amount": "12.50",
+    "reviewStatus": "Ready for review"
+  }
+}

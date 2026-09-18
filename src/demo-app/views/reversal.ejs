@@ -1,5 +1,5 @@
 <%- include("partials/header", { title: "Prepare Fee Reversal" }) %>
-<p>Member <strong><%= member.name %></strong>, checking account ****<%= member.accountLast4 %></p>
+<p data-sensitive="true">Member <strong><%= member.name %></strong>, checking account ****<%= member.accountLast4 %></p>
 <form method="post" action="<%= reviewUrl %>" class="legacy-form">
   <input type="hidden" name="scenario" value="<%= scenario %>">
   <input type="hidden" name="authorized" value="<%= authorized ? "1" : "0" %>">

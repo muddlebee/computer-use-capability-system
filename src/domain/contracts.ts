@@ -46,14 +46,10 @@ export const OutputDefinitionSchema = z.object({
   type: z.enum(["string", "currency", "boolean"]),
   description: z.string().min(1),
   sensitive: z.boolean(),
+  parser: z.enum(["text", "currency", "boolean", "last4"]).optional(),
 });
 
 const ConditionSchema = z.discriminatedUnion("kind", [
-  z.object({
-    kind: z.literal("element_state"),
-    targetKey: IdentifierSchema,
-    state: z.enum(["visible", "hidden", "enabled"]),
-  }),
   z.object({
     kind: z.literal("url_matches"),
     pattern: z.string().min(1),
@@ -64,18 +60,61 @@ const ConditionSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
+const RuntimeRequestSchema = z
+  .object({
+    recoveries: z
+      .array(
+        z.object({
+          code: z.string().regex(/^[a-z][a-z0-9_]*$/),
+          condition: ConditionSchema,
+          actionLabel: z.string().min(1),
+          maxAttempts: z.number().int().min(1).max(3).default(1),
+        }),
+      )
+      .default([]),
+    hardFailures: z
+      .array(
+        z.object({
+          code: z.enum(["permission_denied", "unexpected_state"]),
+          condition: ConditionSchema,
+        }),
+      )
+      .default([]),
+    interventions: z
+      .array(
+        z.object({
+          reason: z.enum(["stuck", "unsafe_action", "supervisor_authorization"]),
+          condition: ConditionSchema,
+          actionLabel: z.string().min(1),
+        }),
+      )
+      .default([]),
+  })
+  .default({ recoveries: [], hardFailures: [], interventions: [] });
+
 export const DiscoveryRequestSchema = z
   .object({
     capabilityId: z.string().regex(/^[a-z][a-z0-9-]*$/),
     target: z.object({
       appId: z.string().regex(/^[a-z][a-z0-9-]*$/),
       startUrl: z.string().url(),
+      allowedPathPatterns: z.array(z.string().min(1)).min(1).default(["^/"]),
     }),
     goalTemplate: z.string().min(1),
     inputs: z.array(InputDefinitionSchema).min(1),
     outputs: z.array(OutputDefinitionSchema).min(1),
+    businessOutcomes: z
+      .array(
+        z.object({
+          code: z.string().regex(/^[a-z][a-z0-9_]*$/),
+          condition: ConditionSchema,
+        }),
+      )
+      .default([]),
+    runtime: RuntimeRequestSchema,
     successDescription: z.string().min(1),
     maxSteps: z.number().int().min(1).max(30).default(15),
+    timeoutMs: z.number().int().min(10_000).max(600_000).default(120_000),
   })
   .superRefine((request, context) => {
     const inputNames = new Set<string>();
@@ -257,6 +296,7 @@ export const CapabilityArtifactSchema = z.object({
     surface: z.literal("browser"),
     entryUrl: z.string().url(),
     allowedOrigins: z.array(z.string().url()).min(1),
+    allowedPathPatterns: z.array(z.string().min(1)).min(1).default(["^/"]),
   }),
   inputs: z.array(ArtifactInputDefinitionSchema).min(1),
   outputs: z.array(OutputDefinitionSchema).min(1),
@@ -268,6 +308,37 @@ export const CapabilityArtifactSchema = z.object({
       condition: ConditionSchema,
     }),
   ),
+  runtime: z
+    .object({
+      recoveries: z.array(
+        z.object({
+          code: z.string().regex(/^[a-z][a-z0-9_]*$/),
+          condition: ConditionSchema,
+          action: z.object({
+            kind: z.literal("click"),
+            target: TargetDescriptorSchema,
+          }),
+          maxAttempts: z.number().int().min(1).max(3),
+        }),
+      ),
+      hardFailures: z.array(
+        z.object({
+          code: z.enum(["permission_denied", "unexpected_state"]),
+          condition: ConditionSchema,
+        }),
+      ),
+      interventions: z.array(
+        z.object({
+          reason: z.enum(["stuck", "unsafe_action", "supervisor_authorization"]),
+          condition: ConditionSchema,
+          humanAction: z.object({
+            kind: z.literal("click"),
+            target: TargetDescriptorSchema,
+          }),
+        }),
+      ),
+    })
+    .default({ recoveries: [], hardFailures: [], interventions: [] }),
   policy: z.object({
     allowedActions: z
       .array(z.enum(["click", "type", "select", "extract", "wait_for"]))
@@ -298,6 +369,7 @@ export const RunResultSchema = z.discriminatedUnion("status", [
       "target_not_found",
       "checkpoint_failed",
       "permission_denied",
+      "human_intervention_required",
       "timeout",
       "policy_denied",
       "unexpected_state",

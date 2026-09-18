@@ -1,0 +1,10 @@
+{
+  "runId": "e394240f-b343-41be-9cf9-999b29594a7b",
+  "capabilityId": "prepare-fee-reversal",
+  "stepId": "step-4",
+  "reason": "supervisor_authorization",
+  "screenshotPath": "evidence/runs/e394240f-b343-41be-9cf9-999b29594a7b/intervention-step-4.png",
+  "currentUrl": "http://127.0.0.1:3000/servicing/accounts/:accountId/fee-reversal?scenario=supervisor",
+  "requestedAt": "2026-09-18T15:55:33.619Z",
+  "controller": "human"
+}

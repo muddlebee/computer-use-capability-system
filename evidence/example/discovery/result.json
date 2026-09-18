@@ -1,0 +1,11 @@
+{
+  "event": "discovery_succeeded",
+  "runId": "bda0aa27-7872-4f3e-971b-e643db081593",
+  "modelCalls": 13,
+  "provider": "openrouter",
+  "model": "openai/gpt-5.6-luna",
+  "usage": {
+    "promptTokens": 24503,
+    "completionTokens": 1179
+  }
+}

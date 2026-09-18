@@ -11,13 +11,15 @@ export interface EvidenceEvent {
   readonly detail?: string;
 }
 
+export interface ScreenshotOptions {
+  readonly maskSelectors?: readonly string[];
+}
+
 export class RunEvidence {
   readonly directory: string;
-  readonly tracePath: string;
 
   private constructor(directory: string) {
     this.directory = directory;
-    this.tracePath = path.join(directory, "trace.zip");
   }
 
   static async create(root: string, runId: string): Promise<RunEvidence> {
@@ -40,9 +42,18 @@ export class RunEvidence {
     );
   }
 
-  async screenshot(page: Page, name: string): Promise<string> {
+  async screenshot(
+    page: Page,
+    name: string,
+    options: ScreenshotOptions = {},
+  ): Promise<string> {
     const screenshotPath = path.join(this.directory, `${name}.png`);
-    await page.screenshot({ path: screenshotPath, fullPage: true });
+    await page.screenshot({
+      path: screenshotPath,
+      fullPage: true,
+      mask: (options.maskSelectors ?? []).map((selector) => page.locator(selector)),
+      maskColor: "#202020",
+    });
     return screenshotPath;
   }
 }

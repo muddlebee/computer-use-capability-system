@@ -8,7 +8,11 @@ coverage/
 
 # Generated run data; curated, redacted examples will be force-added later.
 evidence/runs/
+evidence/discovery/
 
 # Playwright output
 playwright-report/
 test-results/
+
+# Local scratch command output.
+work/

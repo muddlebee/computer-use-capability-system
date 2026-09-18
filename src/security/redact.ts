@@ -10,6 +10,19 @@ export function redactSecrets(value: string): string {
   );
 }
 
+export function redactUrlForEvidence(value: string): string {
+  const url = new URL(value);
+  url.username = "";
+  url.password = "";
+  url.pathname = url.pathname
+    .replace(/\/M-[A-Za-z0-9-]+/g, "/:memberId")
+    .replace(/\/A-[A-Za-z0-9-]+/g, "/:accountId");
+  for (const key of [...url.searchParams.keys()]) {
+    if (key !== "scenario") url.searchParams.delete(key);
+  }
+  return url.toString();
+}
+
 export function safeErrorMessage(error: unknown): string {
   if (!(error instanceof Error)) return "Unknown error";
   return redactSecrets(error.message);

@@ -3,7 +3,7 @@
   "capability": {
     "id": "prepare-fee-reversal",
     "version": "0.1.0",
-    "summary": "Prepare a fee reversal for a member and stop at the review screen."
+    "summary": "The Fee Reversal Review page is visible, all declared outputs have been extracted, and no reversal was submitted."
   },
   "target": {
     "appId": "legacy-credit-union",
@@ -44,25 +44,29 @@
       "name": "reviewReference",
       "type": "string",
       "description": "Reference displayed on the review screen",
-      "sensitive": true
+      "sensitive": true,
+      "parser": "text"
     },
     {
       "name": "accountLast4",
       "type": "string",
       "description": "Last four characters of the account number",
-      "sensitive": true
+      "sensitive": true,
+      "parser": "last4"
     },
     {
       "name": "amount",
       "type": "currency",
       "description": "Fee reversal amount shown for review",
-      "sensitive": false
+      "sensitive": false,
+      "parser": "currency"
     },
     {
       "name": "reviewStatus",
       "type": "string",
       "description": "Current review status",
-      "sensitive": false
+      "sensitive": false,
+      "parser": "text"
     }
   ],
   "steps": [
@@ -70,8 +74,14 @@
       "id": "step-1",
       "kind": "type",
       "target": {
-        "key": "memberIdField",
+        "key": "memberidField",
         "strategies": [
+          {
+            "kind": "role",
+            "role": "textbox",
+            "name": "Member number",
+            "exact": true
+          },
           {
             "kind": "attribute",
             "name": "name",
@@ -93,7 +103,7 @@
       "id": "step-2",
       "kind": "click",
       "target": {
-        "key": "searchButton",
+        "key": "searchMembersButton",
         "strategies": [
           {
             "kind": "role",
@@ -105,6 +115,10 @@
             "kind": "text",
             "text": "Search Members",
             "exact": true
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)"
           }
         ]
       },
@@ -121,6 +135,15 @@
             "role": "link",
             "name": "Open account",
             "exact": true
+          },
+          {
+            "kind": "text",
+            "text": "Open account",
+            "exact": true
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(2) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(4) > a:nth-of-type(1)"
           }
         ]
       },
@@ -130,13 +153,22 @@
       "id": "step-4",
       "kind": "click",
       "target": {
-        "key": "prepareReversalLink",
+        "key": "prepareFeeReversalLink",
         "strategies": [
           {
             "kind": "role",
             "role": "link",
             "name": "Prepare fee reversal",
             "exact": true
+          },
+          {
+            "kind": "text",
+            "text": "Prepare fee reversal",
+            "exact": true
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > ul:nth-of-type(1) > li:nth-of-type(1) > a:nth-of-type(1)"
           }
         ]
       },
@@ -149,9 +181,19 @@
         "key": "amountField",
         "strategies": [
           {
+            "kind": "role",
+            "role": "textbox",
+            "name": "Reversal amount",
+            "exact": true
+          },
+          {
             "kind": "attribute",
             "name": "name",
             "value": "amount"
+          },
+          {
+            "kind": "css",
+            "selector": "input[name=\"amount\"]"
           }
         ]
       },
@@ -168,9 +210,19 @@
         "key": "reasonField",
         "strategies": [
           {
+            "kind": "role",
+            "role": "combobox",
+            "name": "-- Select reason -- Duplicate fee Incorrect fee Other",
+            "exact": true
+          },
+          {
             "kind": "attribute",
             "name": "name",
             "value": "reason"
+          },
+          {
+            "kind": "css",
+            "selector": "select[name=\"reason\"]"
           }
         ]
       },
@@ -191,6 +243,15 @@
             "role": "button",
             "name": "Continue to review",
             "exact": true
+          },
+          {
+            "kind": "text",
+            "text": "Continue to review",
+            "exact": true
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > form:nth-of-type(1) > button:nth-of-type(1)"
           }
         ]
       },
@@ -200,11 +261,15 @@
       "id": "step-8",
       "kind": "extract",
       "target": {
-        "key": "reviewReferenceValue",
+        "key": "reviewReferenceTarget",
         "strategies": [
           {
             "kind": "row_label",
             "label": "Review reference"
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(1) > td:nth-of-type(1)"
           }
         ]
       },
@@ -216,11 +281,15 @@
       "id": "step-9",
       "kind": "extract",
       "target": {
-        "key": "accountLast4Value",
+        "key": "accountTarget",
         "strategies": [
           {
             "kind": "row_label",
             "label": "Account"
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(2) > td:nth-of-type(1)"
           }
         ]
       },
@@ -232,11 +301,15 @@
       "id": "step-10",
       "kind": "extract",
       "target": {
-        "key": "amountValue",
+        "key": "amountTarget",
         "strategies": [
           {
             "kind": "row_label",
             "label": "Amount"
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(3) > td:nth-of-type(1)"
           }
         ]
       },
@@ -248,11 +321,15 @@
       "id": "step-11",
       "kind": "extract",
       "target": {
-        "key": "reviewStatusValue",
+        "key": "statusTarget",
         "strategies": [
           {
             "kind": "row_label",
             "label": "Status"
+          },
+          {
+            "kind": "css",
+            "selector": "body:nth-of-type(1) > main:nth-of-type(1) > table:nth-of-type(1) > tbody:nth-of-type(1) > tr:nth-of-type(5) > td:nth-of-type(1)"
           }
         ]
       },
@@ -274,6 +351,86 @@
       }
     }
   ],
+  "runtime": {
+    "recoveries": [
+      {
+        "code": "session_extended",
+        "condition": {
+          "kind": "text_present",
+          "text": "Your session is about to expire"
+        },
+        "action": {
+          "kind": "click",
+          "target": {
+            "key": "continueSessionControl",
+            "strategies": [
+              {
+                "kind": "role",
+                "role": "button",
+                "name": "Continue session",
+                "exact": true
+              },
+              {
+                "kind": "role",
+                "role": "link",
+                "name": "Continue session",
+                "exact": true
+              },
+              {
+                "kind": "text",
+                "text": "Continue session",
+                "exact": true
+              }
+            ]
+          }
+        },
+        "maxAttempts": 1
+      }
+    ],
+    "hardFailures": [
+      {
+        "code": "permission_denied",
+        "condition": {
+          "kind": "text_present",
+          "text": "Permission denied"
+        }
+      }
+    ],
+    "interventions": [
+      {
+        "reason": "supervisor_authorization",
+        "condition": {
+          "kind": "text_present",
+          "text": "Supervisor authorization required"
+        },
+        "humanAction": {
+          "kind": "click",
+          "target": {
+            "key": "approveAsSupervisorControl",
+            "strategies": [
+              {
+                "kind": "role",
+                "role": "button",
+                "name": "Approve as supervisor",
+                "exact": true
+              },
+              {
+                "kind": "role",
+                "role": "link",
+                "name": "Approve as supervisor",
+                "exact": true
+              },
+              {
+                "kind": "text",
+                "text": "Approve as supervisor",
+                "exact": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "policy": {
     "allowedActions": [
       "click",

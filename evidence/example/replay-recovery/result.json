@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "runId": "0b195f06-fa3f-4b85-a7d6-4350195cdd07",
+  "recoveries": [
+    "session_extended"
+  ],
+  "outputs": {
+    "reviewReference": "[REDACTED]",
+    "accountLast4": "[REDACTED]",
+    "amount": "12.50",
+    "reviewStatus": "Ready for review"
+  }
+}

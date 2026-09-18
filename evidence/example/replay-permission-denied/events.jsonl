@@ -1,0 +1,8 @@
+{"timestamp":"2026-09-18T15:55:27.429Z","event":"replay_started"}
+{"timestamp":"2026-09-18T15:55:27.542Z","event":"step_started","stepId":"step-1","detail":"type"}
+{"timestamp":"2026-09-18T15:55:27.589Z","event":"step_completed","stepId":"step-1"}
+{"timestamp":"2026-09-18T15:55:27.599Z","event":"step_started","stepId":"step-2","detail":"click"}
+{"timestamp":"2026-09-18T15:55:27.654Z","event":"step_completed","stepId":"step-2"}
+{"timestamp":"2026-09-18T15:55:27.695Z","event":"step_started","stepId":"step-3","detail":"click"}
+{"timestamp":"2026-09-18T15:55:27.766Z","event":"step_completed","stepId":"step-3"}
+{"timestamp":"2026-09-18T15:55:27.886Z","event":"replay_failed","stepId":"step-3","detail":"Detected declared hard failure: permission_denied"}

@@ -1,0 +1,5 @@
+{"timestamp":"2026-09-18T15:55:22.103Z","event":"replay_started"}
+{"timestamp":"2026-09-18T15:55:22.212Z","event":"step_started","stepId":"step-1","detail":"type"}
+{"timestamp":"2026-09-18T15:55:22.256Z","event":"step_completed","stepId":"step-1"}
+{"timestamp":"2026-09-18T15:55:22.267Z","event":"step_started","stepId":"step-2","detail":"click"}
+{"timestamp":"2026-09-18T15:55:22.322Z","event":"step_completed","stepId":"step-2"}

@@ -1,0 +1,105 @@
+{
+  "capabilityId": "prepare-fee-reversal",
+  "target": {
+    "appId": "legacy-credit-union",
+    "startUrl": "http://127.0.0.1:3000/servicing/search?scenario=happy",
+    "allowedPathPatterns": ["^/servicing/"]
+  },
+  "goalTemplate": "Prepare a fee reversal of {{amount}} for member {{memberId}} using reason {{reason}}, stop on the review screen, and do not submit it.",
+  "inputs": [
+    {
+      "name": "memberId",
+      "type": "string",
+      "currentValue": "M-1001",
+      "sensitive": true,
+      "pattern": "^M-[0-9]{4}$"
+    },
+    {
+      "name": "amount",
+      "type": "decimal",
+      "currentValue": "12.50",
+      "sensitive": false
+    },
+    {
+      "name": "reason",
+      "type": "enum",
+      "currentValue": "duplicate_fee",
+      "sensitive": false,
+      "values": ["duplicate_fee", "incorrect_fee", "other"]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "reviewReference",
+      "type": "string",
+      "description": "Reference displayed on the review screen",
+      "sensitive": true,
+      "parser": "text"
+    },
+    {
+      "name": "accountLast4",
+      "type": "string",
+      "description": "Last four characters of the account number",
+      "sensitive": true,
+      "parser": "last4"
+    },
+    {
+      "name": "amount",
+      "type": "currency",
+      "description": "Fee reversal amount shown for review",
+      "sensitive": false,
+      "parser": "currency"
+    },
+    {
+      "name": "reviewStatus",
+      "type": "string",
+      "description": "Current review status",
+      "sensitive": false,
+      "parser": "text"
+    }
+  ],
+  "businessOutcomes": [
+    {
+      "code": "member_not_found",
+      "condition": {
+        "kind": "text_present",
+        "text": "No member found for that identifier"
+      }
+    }
+  ],
+  "runtime": {
+    "recoveries": [
+      {
+        "code": "session_extended",
+        "condition": {
+          "kind": "text_present",
+          "text": "Your session is about to expire"
+        },
+        "actionLabel": "Continue session",
+        "maxAttempts": 1
+      }
+    ],
+    "hardFailures": [
+      {
+        "code": "permission_denied",
+        "condition": {
+          "kind": "text_present",
+          "text": "Permission denied"
+        }
+      }
+    ],
+    "interventions": [
+      {
+        "reason": "supervisor_authorization",
+        "condition": {
+          "kind": "text_present",
+          "text": "Supervisor authorization required"
+        },
+        "actionLabel": "Approve as supervisor"
+      }
+    ]
+  },
+  "successDescription": "The Fee Reversal Review page is visible, all declared outputs have been extracted, and no reversal was submitted.",
+  "maxSteps": 15,
+  "timeoutMs": 120000
+}

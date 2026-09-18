@@ -1,0 +1,27 @@
+{"timestamp":"2026-09-18T15:55:33.017Z","event":"replay_started"}
+{"timestamp":"2026-09-18T15:55:33.138Z","event":"step_started","stepId":"step-1","detail":"type"}
+{"timestamp":"2026-09-18T15:55:33.187Z","event":"step_completed","stepId":"step-1"}
+{"timestamp":"2026-09-18T15:55:33.197Z","event":"step_started","stepId":"step-2","detail":"click"}
+{"timestamp":"2026-09-18T15:55:33.256Z","event":"step_completed","stepId":"step-2"}
+{"timestamp":"2026-09-18T15:55:33.301Z","event":"step_started","stepId":"step-3","detail":"click"}
+{"timestamp":"2026-09-18T15:55:33.380Z","event":"step_completed","stepId":"step-3"}
+{"timestamp":"2026-09-18T15:55:33.419Z","event":"step_started","stepId":"step-4","detail":"click"}
+{"timestamp":"2026-09-18T15:55:33.500Z","event":"step_completed","stepId":"step-4"}
+{"timestamp":"2026-09-18T15:55:33.621Z","event":"control_transferred","stepId":"step-4","detail":"paused->human reason=supervisor_authorization"}
+{"timestamp":"2026-09-18T15:55:42.057Z","event":"human_action_started","stepId":"step-4","detail":"controller=human"}
+{"timestamp":"2026-09-18T15:55:42.122Z","event":"human_action_completed","stepId":"step-4","detail":"approved action completed; control=automation"}
+{"timestamp":"2026-09-18T15:55:42.162Z","event":"step_started","stepId":"step-5","detail":"type"}
+{"timestamp":"2026-09-18T15:55:42.198Z","event":"step_completed","stepId":"step-5"}
+{"timestamp":"2026-09-18T15:55:42.212Z","event":"step_started","stepId":"step-6","detail":"select"}
+{"timestamp":"2026-09-18T15:55:42.247Z","event":"step_completed","stepId":"step-6"}
+{"timestamp":"2026-09-18T15:55:42.262Z","event":"step_started","stepId":"step-7","detail":"click"}
+{"timestamp":"2026-09-18T15:55:42.366Z","event":"step_completed","stepId":"step-7"}
+{"timestamp":"2026-09-18T15:55:42.416Z","event":"step_started","stepId":"step-8","detail":"extract"}
+{"timestamp":"2026-09-18T15:55:42.449Z","event":"step_completed","stepId":"step-8"}
+{"timestamp":"2026-09-18T15:55:42.463Z","event":"step_started","stepId":"step-9","detail":"extract"}
+{"timestamp":"2026-09-18T15:55:42.486Z","event":"step_completed","stepId":"step-9"}
+{"timestamp":"2026-09-18T15:55:42.499Z","event":"step_started","stepId":"step-10","detail":"extract"}
+{"timestamp":"2026-09-18T15:55:42.523Z","event":"step_completed","stepId":"step-10"}
+{"timestamp":"2026-09-18T15:55:42.536Z","event":"step_started","stepId":"step-11","detail":"extract"}
+{"timestamp":"2026-09-18T15:55:42.559Z","event":"step_completed","stepId":"step-11"}
+{"timestamp":"2026-09-18T15:55:42.667Z","event":"replay_succeeded"}

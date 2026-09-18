@@ -1,7 +1,7 @@
 <%- include("partials/header", { title: "Account Details" }) %>
 <table class="details-table">
-  <tr><th>Account</th><td>Checking ****<%= member.accountLast4 %></td></tr>
-  <tr><th>Available balance</th><td><%= member.balance %></td></tr>
+  <tr><th>Account</th><td data-sensitive="true">Checking ****<%= member.accountLast4 %></td></tr>
+  <tr><th>Available balance</th><td data-sensitive="true"><%= member.balance %></td></tr>
 </table>
 <h2>Account actions</h2>
 <% if (permissionDenied) { %>

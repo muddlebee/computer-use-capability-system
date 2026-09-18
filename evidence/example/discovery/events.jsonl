@@ -1,0 +1,15 @@
+{"timestamp":"2026-09-18T15:54:23.016Z","event":"discovery_started"}
+{"timestamp":"2026-09-18T15:54:26.360Z","event":"discovery_action","detail":"turn=1 kind=type"}
+{"timestamp":"2026-09-18T15:54:28.819Z","event":"discovery_action","detail":"turn=2 kind=click"}
+{"timestamp":"2026-09-18T15:54:32.256Z","event":"discovery_action","detail":"turn=3 kind=click"}
+{"timestamp":"2026-09-18T15:54:35.462Z","event":"discovery_action","detail":"turn=4 kind=click"}
+{"timestamp":"2026-09-18T15:54:39.731Z","event":"discovery_action","detail":"turn=5 kind=type"}
+{"timestamp":"2026-09-18T15:54:44.339Z","event":"discovery_action","detail":"turn=6 kind=select"}
+{"timestamp":"2026-09-18T15:54:47.668Z","event":"discovery_action","detail":"turn=7 kind=click"}
+{"timestamp":"2026-09-18T15:54:51.862Z","event":"discovery_action","detail":"turn=8 kind=extract"}
+{"timestamp":"2026-09-18T15:54:56.217Z","event":"discovery_action","detail":"turn=9 kind=extract"}
+{"timestamp":"2026-09-18T15:55:00.032Z","event":"discovery_action","detail":"turn=10 kind=extract"}
+{"timestamp":"2026-09-18T15:55:02.565Z","event":"discovery_action","detail":"turn=11 kind=extract"}
+{"timestamp":"2026-09-18T15:55:07.378Z","event":"discovery_action","detail":"turn=12 kind=complete"}
+{"timestamp":"2026-09-18T15:55:10.872Z","event":"discovery_action","detail":"turn=13 kind=complete"}
+{"timestamp":"2026-09-18T15:55:10.967Z","event":"discovery_succeeded"}

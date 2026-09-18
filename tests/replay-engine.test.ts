@@ -8,6 +8,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDemoApp } from "../src/demo-app/app.js";
 import { CapabilityArtifactSchema } from "../src/domain/contracts.js";
 import { replayCapability } from "../src/replay/replay-engine.js";
+import { OperatorConsoleHandoff } from "../src/handoff/operator-console.js";
 
 describe("deterministic replay", () => {
   let server: Server;
@@ -35,12 +36,12 @@ describe("deterministic replay", () => {
     await rm(evidenceRoot, { recursive: true, force: true });
   });
 
-  it("replays the artifact without a model and returns typed outputs", async () => {
+  async function loadArtifact() {
     const artifactJson: unknown = JSON.parse(
-      await readFile("artifacts/prepare-fee-reversal.v1.json", "utf8"),
+      await readFile("artifacts/prepare-fee-reversal.generated.json", "utf8"),
     );
     const savedArtifact = CapabilityArtifactSchema.parse(artifactJson);
-    const artifact = CapabilityArtifactSchema.parse({
+    return CapabilityArtifactSchema.parse({
       ...savedArtifact,
       target: {
         ...savedArtifact.target,
@@ -48,6 +49,10 @@ describe("deterministic replay", () => {
         allowedOrigins: [origin],
       },
     });
+  }
+
+  it("replays the artifact without a model and returns typed outputs", async () => {
+    const artifact = await loadArtifact();
 
     const result = await replayCapability({
       artifact,
@@ -75,5 +80,113 @@ describe("deterministic replay", () => {
     );
     expect(events).toContain("replay_succeeded");
     expect(events).not.toContain("M-1001");
+  }, 30_000);
+
+  it("returns a known business outcome instead of a crash", async () => {
+    const artifact = await loadArtifact();
+    const result = await replayCapability({
+      artifact,
+      rawInputs: {
+        memberId: "M-4040",
+        amount: "12.50",
+        reason: "duplicate_fee",
+      },
+      evidenceRoot,
+      entryUrlOverride: `${origin}/servicing/search?scenario=not-found`,
+    });
+
+    expect(result).toMatchObject({
+      status: "business_outcome",
+      code: "member_not_found",
+    });
+  }, 30_000);
+
+  it("recovers from the declared session warning", async () => {
+    const artifact = await loadArtifact();
+    const result = await replayCapability({
+      artifact,
+      rawInputs: {
+        memberId: "M-1001",
+        amount: "12.50",
+        reason: "duplicate_fee",
+      },
+      evidenceRoot,
+      entryUrlOverride: `${origin}/servicing/search?scenario=session-warning`,
+    });
+
+    expect(result).toMatchObject({
+      status: "success",
+      recoveries: ["session_extended"],
+    });
+  }, 30_000);
+
+  it("classifies a declared permission denial as a hard failure", async () => {
+    const artifact = await loadArtifact();
+    const result = await replayCapability({
+      artifact,
+      rawInputs: {
+        memberId: "M-1001",
+        amount: "12.50",
+        reason: "duplicate_fee",
+      },
+      evidenceRoot,
+      entryUrlOverride: `${origin}/servicing/search?scenario=permission-denied`,
+    });
+
+    expect(result).toMatchObject({
+      status: "failure",
+      code: "permission_denied",
+      stepId: "step-3",
+      retryable: false,
+    });
+  }, 30_000);
+
+  it("blocks a same-origin route outside the configured path allowlist", async () => {
+    const artifact = await loadArtifact();
+    const result = await replayCapability({
+      artifact,
+      rawInputs: {
+        memberId: "M-1001",
+        amount: "12.50",
+        reason: "duplicate_fee",
+      },
+      evidenceRoot,
+      entryUrlOverride: `${origin}/administration/users`,
+    });
+
+    expect(result).toMatchObject({
+      status: "failure",
+      code: "policy_denied",
+    });
+  });
+
+  it("cedes the same live session to an operator and resumes", async () => {
+    const artifact = await loadArtifact();
+    const handoff = new OperatorConsoleHandoff({
+      timeoutMs: 10_000,
+      onReady: async (url) => {
+        const response = await fetch(`${url}/act`, { method: "POST" });
+        if (!response.ok) throw new Error(`Operator action failed: ${response.status}`);
+      },
+    });
+    const result = await replayCapability({
+      artifact,
+      rawInputs: {
+        memberId: "M-1001",
+        amount: "12.50",
+        reason: "duplicate_fee",
+      },
+      evidenceRoot,
+      entryUrlOverride: `${origin}/servicing/search?scenario=supervisor`,
+      handoff,
+    });
+
+    expect(result.status).toBe("success");
+    const events = await readFile(
+      path.join(result.evidenceDirectory, "events.jsonl"),
+      "utf8",
+    );
+    expect(events).toContain("control_transferred");
+    expect(events).toContain("human_action_completed");
   }, 30_000);
 });
