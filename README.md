@@ -1,6 +1,6 @@
 # Computer-Use Capability System
 
-A focused implementation of the interface.ai computer-use assignment. An LLM discovers a workflow against a live, intentionally legacy-style servicing UI; the system compiles that run into a typed JSON capability; subsequent invocations replay the capability deterministically without an LLM.
+A reference implementation of a computer-use capability system. An LLM discovers a workflow against a live, intentionally legacy-style servicing UI; the system compiles that run into a typed JSON capability; subsequent invocations replay the capability deterministically without an LLM.
 
 The included workflow prepares a fee reversal and stops at the review screen. It deliberately never submits the reversal.
 
