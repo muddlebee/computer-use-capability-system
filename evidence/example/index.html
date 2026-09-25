@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Curated evidence for an LLM-discovered, deterministically replayed computer-use capability.">
+  <title>Computer-Use Capability — Demo Evidence</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #16231d;
+      --muted: #59645e;
+      --paper: #f3f0e7;
+      --panel: #fbf9f2;
+      --line: #c8c6b9;
+      --green: #1f5d45;
+      --green-dark: #123d2e;
+      --amber: #b96918;
+      --red: #943f35;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(rgba(22, 35, 29, .035) 1px, transparent 1px),
+        var(--paper);
+      background-size: 100% 2rem;
+      color: var(--ink);
+      font-family: "Aptos", "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+
+    .shell {
+      width: min(1160px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    header {
+      padding: clamp(3rem, 8vw, 7rem) 0 3rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .eyebrow {
+      margin: 0 0 1rem;
+      color: var(--green);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 600;
+      letter-spacing: -.025em;
+    }
+
+    h1 {
+      max-width: 850px;
+      margin: 0;
+      font-size: clamp(2.65rem, 7vw, 5.75rem);
+      line-height: .98;
+    }
+
+    .lede {
+      max-width: 760px;
+      margin: 2rem 0 0;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.3rem);
+    }
+
+    .status-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .65rem;
+      margin-top: 2rem;
+    }
+
+    .status {
+      padding: .42rem .7rem;
+      border: 1px solid var(--green);
+      color: var(--green-dark);
+      background: #e5eee8;
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    main { padding: 3.5rem 0 5rem; }
+
+    .primary-flow {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      margin-bottom: 4rem;
+      border: 1px solid var(--line);
+      background: var(--line);
+    }
+
+    .phase {
+      position: relative;
+      min-height: 310px;
+      padding: clamp(1.5rem, 4vw, 3rem);
+      background: var(--panel);
+    }
+
+    .phase-number {
+      color: var(--green);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 4rem;
+      line-height: 1;
+    }
+
+    .phase h2 {
+      margin: 1.2rem 0 .65rem;
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+    }
+
+    .phase p {
+      max-width: 48ch;
+      margin: 0 0 1.5rem;
+      color: var(--muted);
+    }
+
+    .button {
+      display: inline-block;
+      padding: .75rem 1rem;
+      border: 1px solid var(--green-dark);
+      background: var(--green-dark);
+      color: #f7f4ea;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .button:hover, .button:focus-visible { background: var(--green); }
+
+    .section-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, .6fr);
+      gap: 2rem;
+      align-items: end;
+      margin: 0 0 1.5rem;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.4rem);
+    }
+
+    .section-heading p { margin: 0; color: var(--muted); }
+
+    .scenario-list {
+      margin: 0 0 4rem;
+      padding: 0;
+      border-top: 1px solid var(--line);
+      list-style: none;
+    }
+
+    .scenario {
+      display: grid;
+      grid-template-columns: 8rem minmax(180px, .45fr) 1fr auto;
+      gap: 1.25rem;
+      align-items: center;
+      padding: 1.15rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .scenario-type {
+      color: var(--green);
+      font-size: .74rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+
+    .scenario.business .scenario-type { color: var(--amber); }
+    .scenario.failure .scenario-type { color: var(--red); }
+
+    .scenario strong { font-family: Georgia, "Times New Roman", serif; font-size: 1.15rem; }
+    .scenario span { color: var(--muted); }
+
+    .scenario-links {
+      display: flex;
+      gap: .85rem;
+      white-space: nowrap;
+    }
+
+    .scenario-links a { color: var(--green-dark); font-weight: 750; }
+
+    .artifact {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+      gap: clamp(2rem, 7vw, 6rem);
+      align-items: center;
+      padding: clamp(2rem, 5vw, 4rem);
+      background: var(--green-dark);
+      color: #f2efe5;
+    }
+
+    .artifact h2 { margin: 0 0 1rem; font-size: clamp(2rem, 5vw, 3.4rem); }
+    .artifact p { color: #c8d6ce; }
+
+    .artifact-links {
+      display: grid;
+      border-top: 1px solid #557364;
+    }
+
+    .artifact-links a {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: .9rem 0;
+      border-bottom: 1px solid #557364;
+      color: inherit;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 2rem;
+      padding: 1.5rem 0 3rem;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    footer a { color: var(--green-dark); }
+
+    @media (max-width: 760px) {
+      .primary-flow, .section-heading, .artifact { grid-template-columns: 1fr; }
+      .scenario { grid-template-columns: 1fr; gap: .35rem; }
+      .scenario-links { margin-top: .35rem; }
+      footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="shell">
+      <p class="eyebrow">Curated execution evidence</p>
+      <h1>Discover once.<br>Replay deterministically.</h1>
+      <p class="lede">A working computer-use vertical slice: an LLM learns a multi-step flow on a live legacy-style UI, compiles it into a typed capability, and a model-free executor safely replays it.</p>
+      <div class="status-row" aria-label="Implemented capabilities">
+        <span class="status">Real LLM discovery</span>
+        <span class="status">Model-free replay</span>
+        <span class="status">Typed results</span>
+        <span class="status">Same-session handoff</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section class="primary-flow" aria-label="Primary end-to-end flow">
+      <article class="phase">
+        <div class="phase-number">01</div>
+        <h2>LLM discovery</h2>
+        <p>Inspect the complete observe-decide-act run: sanitized model calls, selected tools, event log, structured result, and masked screenshots for every turn.</p>
+        <a class="button" href="discovery/index.html">Open discovery evidence</a>
+      </article>
+      <article class="phase">
+        <div class="phase-number">02</div>
+        <h2>Deterministic replay</h2>
+        <p>Follow the generated capability replaying the same workflow without an LLM, extracting typed outputs and verifying the review checkpoint.</p>
+        <a class="button" href="replay-happy/index.html">Open replay evidence</a>
+      </article>
+    </section>
+
+    <section aria-labelledby="runtime-heading">
+      <div class="section-heading">
+        <h2 id="runtime-heading">Runtime conditions</h2>
+        <p>The executor distinguishes expected business outcomes, bounded recovery, hard failure, and conditions that require a human.</p>
+      </div>
+      <ul class="scenario-list">
+        <li class="scenario business">
+          <span class="scenario-type">Business outcome</span>
+          <strong>Member not found</strong>
+          <span>Returns a typed domain result rather than crashing.</span>
+          <span class="scenario-links"><a href="replay-not-found/result.json">Result</a><a href="replay-not-found/business-outcome.png">Screenshot</a></span>
+        </li>
+        <li class="scenario">
+          <span class="scenario-type">Recovery</span>
+          <strong>Session warning</strong>
+          <span>Applies one declared recovery and continues replay.</span>
+          <span class="scenario-links"><a href="replay-recovery/result.json">Result</a><a href="replay-recovery/events.jsonl">Events</a></span>
+        </li>
+        <li class="scenario failure">
+          <span class="scenario-type">Hard failure</span>
+          <strong>Permission denied</strong>
+          <span>Stops immediately with step, expectation, and observation.</span>
+          <span class="scenario-links"><a href="replay-permission-denied/result.json">Result</a><a href="replay-permission-denied/failure.png">Screenshot</a></span>
+        </li>
+        <li class="scenario">
+          <span class="scenario-type">Human handoff</span>
+          <strong>Supervisor approval</strong>
+          <span>Pauses automation, transfers the same session, then resumes.</span>
+          <span class="scenario-links"><a href="replay-human-handoff/intervention.json">Request</a><a href="replay-human-handoff/result.json">Result</a></span>
+        </li>
+      </ul>
+    </section>
+
+    <section class="artifact" aria-labelledby="artifact-heading">
+      <div>
+        <p class="eyebrow" style="color: #a8c4b5">Reviewable capability contract</p>
+        <h2 id="artifact-heading">The transcript is evidence.<br>The artifact is the product.</h2>
+        <p>The generated JSON contains versioned inputs, typed outputs, ordered actions, locator fallbacks, policies, runtime conditions, and a success checkpoint—without invocation values.</p>
+      </div>
+      <nav class="artifact-links" aria-label="Artifact and trace files">
+        <a href="capability-artifact.json"><span>Capability artifact</span><span>JSON ↗</span></a>
+        <a href="discovery/llm-call-trace.jsonl"><span>Sanitized LLM trace</span><span>JSONL ↗</span></a>
+        <a href="discovery/model-tool-calls.jsonl"><span>Model tool calls</span><span>JSONL ↗</span></a>
+        <a href="https://github.com/muddlebee/computer-use-capability-system"><span>Source repository</span><span>GitHub ↗</span></a>
+      </nav>
+    </section>
+  </main>
+
+  <footer class="shell">
+    <span>All records are synthetic. Persisted sensitive values and screenshots are redacted.</span>
+    <a href="https://github.com/muddlebee/computer-use-capability-system/blob/main/REPORT.md">Read the design report</a>
+  </footer>
+</body>
+</html>
