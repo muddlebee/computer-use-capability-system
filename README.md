@@ -172,6 +172,8 @@ Replay pauses and prints an `intervention_ready` URL. Open it locally, inspect t
 
 ## Evidence
 
+Open the [hosted evidence walkthrough](https://computer-use-capability-demo.vercel.app/) for a reviewer-friendly view of the complete discovery and replay flow.
+
 Curated, redacted evidence is under [`evidence/example`](evidence/example):
 
 - genuine OpenRouter discovery log and screenshot
